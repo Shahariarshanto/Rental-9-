@@ -21,6 +21,7 @@ import {
 import { motion } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import OptimizedImage from '../components/OptimizedImage';
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -163,11 +164,10 @@ export default function PropertyDetails() {
       <div className="relative bg-gray-100">
         <div className="h-[40vh] md:h-[60vh] relative overflow-hidden">
           {property.images && property.images.length > 0 ? (
-            <img 
+            <OptimizedImage 
               src={property.images[0]} 
               alt={property.title} 
-              className="w-full h-full object-cover" 
-              loading="lazy" 
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -185,11 +185,10 @@ export default function PropertyDetails() {
                   key={index} 
                   className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-lg pointer-events-auto"
                 >
-                  <img 
+                  <OptimizedImage 
                     src={img} 
                     alt={`${property.title} - view ${index + 1}`} 
-                    className="w-full h-full object-cover" 
-                    loading="lazy"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               ))}

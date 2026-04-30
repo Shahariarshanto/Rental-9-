@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
 import { seedDatabase } from '../lib/seedData';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import OptimizedImage from '../components/OptimizedImage';
 
 export default function HomePage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -363,11 +364,12 @@ export default function HomePage() {
                 >
                   <Link to={`/property/${p.id}`} className="block bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-50">
                     <div className="relative h-56 bg-gray-100">
-                      {p.images?.[0] ? (
-                        <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300"><HomeIcon className="w-10 h-10" /></div>
-                      )}
+                      <OptimizedImage 
+                        src={p.images?.[0] || ""} 
+                        alt={p.title} 
+                        className="w-full h-full object-cover" 
+                        fallbackSrc="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop"
+                      />
                       
                       <div className="absolute top-4 right-4 z-20">
                         <button 

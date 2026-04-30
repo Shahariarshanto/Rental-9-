@@ -3,6 +3,7 @@ import { collection, query, where, onSnapshot, deleteDoc, doc, serverTimestamp, 
 import { auth, db } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { Property } from '../types';
+import OptimizedImage from '../components/OptimizedImage';
 import { MapPin, Home as HomeIcon, Settings, Trash2, ExternalLink, AlertCircle, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -88,13 +89,11 @@ export default function MyListings() {
                 className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4"
               >
                 <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                  {p.images?.[0] ? (
-                    <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <HomeIcon className="w-8 h-8" />
-                    </div>
-                  )}
+                  <OptimizedImage 
+                    src={p.images?.[0] || ""} 
+                    alt={p.title} 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 
                 <div className="flex-1 min-w-0">

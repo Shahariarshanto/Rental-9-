@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
+import OptimizedImage from '../components/OptimizedImage';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -140,10 +141,11 @@ export default function Profile() {
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center">
           <div className="relative group">
             <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-50 shadow-inner mb-4">
-              <img 
+              <OptimizedImage 
                 src={profile?.photoURL || "https://ui-avatars.com/api/?name=" + profile?.displayName} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
+                fallbackSrc="https://ui-avatars.com/api/?name=User"
               />
             </div>
             <button className="absolute bottom-4 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg border-2 border-white">

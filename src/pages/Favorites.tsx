@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import OptimizedImage from '../components/OptimizedImage';
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<Property[]>([]);
@@ -122,13 +123,11 @@ export default function Favorites() {
                 >
                   <Link to={`/property/${p.id}`} className="block bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-50">
                     <div className="relative h-44 bg-gray-100">
-                      {p.images?.[0] ? (
-                        <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <HomeIcon className="w-8 h-8" />
-                        </div>
-                      )}
+                      <OptimizedImage 
+                        src={p.images?.[0] || ""} 
+                        alt={p.title} 
+                        className="w-full h-full object-cover"
+                      />
                       <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-2 rounded-2xl text-red-500 shadow-xl border border-white/50">
                         <Heart className="w-4 h-4 fill-current" />
                       </div>
