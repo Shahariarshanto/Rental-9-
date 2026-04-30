@@ -68,9 +68,14 @@ service cloud.firestore {
       allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
       
       match /messages/{messageId} {
-        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-        allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId && 
+        allow read: if isSignedIn() && 
+                      exists(/databases/$(database)/documents/chats/$(chatId)) &&
                       request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        
+        allow create: if isSignedIn() && 
+                        request.auth.uid == request.resource.data.senderId && 
+                        exists(/databases/$(database)/documents/chats/$(chatId)) &&
+                        request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
       }
     }
   }

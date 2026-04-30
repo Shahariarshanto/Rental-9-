@@ -54,8 +54,8 @@ export default function Inbox() {
 
   const filteredChats = chats.filter(chat => {
     const remoteUid = chat.participants.find(p => p !== auth.currentUser?.uid);
-    const remoteDetails = chat.participantDetails[remoteUid || ''];
-    return remoteDetails?.displayName.toLowerCase().includes(searchTerm.toLowerCase());
+    const remoteDetails = chat.participantDetails?.[remoteUid || ''];
+    return remoteDetails?.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
   });
 
   if (loading) {

@@ -53,58 +53,75 @@ export default function ChatRoom() {
 
     // 1. Fetch/Create Chat Metadata
     const fetchChatAndInit = async () => {
-      const chatRef = doc(db, 'chats', chatId);
-      const chatSnap = await getDoc(chatRef);
+      try {
+        const chatRef = doc(db, 'chats', chatId);
+        const chatSnap = await getDoc(chatRef);
 
-      if (!chatSnap.exists()) {
-        if (!ownerId) {
-          navigate('/inbox');
-          return;
-        }
-
-        // Fetch owner details to initialize chat
-        const ownerSnap = await getDoc(doc(db, 'users', ownerId));
-        const ownerData = ownerSnap.data() as UserProfile;
-        
-        const mySnap = await getDoc(doc(db, 'users', auth.currentUser!.uid));
-        const myData = mySnap.data() as UserProfile;
-
-        const newChat: Partial<Chat> = {
-          participants: [auth.currentUser!.uid, ownerId],
-          participantDetails: {
-            [auth.currentUser!.uid]: {
-              displayName: myData.displayName,
-              photoURL: myData.photoURL || `https://ui-avatars.com/api/?name=${myData.displayName}`,
-            },
-            [ownerId]: {
-              displayName: ownerData.displayName,
-              photoURL: ownerData.photoURL || `https://ui-avatars.com/api/?name=${ownerData.displayName}`,
-            }
-          },
-          lastTimestamp: serverTimestamp(),
-          unreadCount: {
-            [ownerId]: 0,
-            [auth.currentUser!.uid]: 0,
+        if (!chatSnap.exists()) {
+          if (!ownerId) {
+            navigate('/inbox');
+            return;
           }
-        };
-        await setDoc(chatRef, newChat);
-        setChat({ id: chatId, ...newChat } as Chat);
-        setRemoteUser(ownerData);
-      } else {
-        const cData = { id: chatId, ...chatSnap.data() } as Chat;
-        setChat(cData);
-        
-        // Identify remote user
-        const remoteUid = cData.participants.find(p => p !== auth.currentUser?.uid);
-        if (remoteUid) {
-          const rSnap = await getDoc(doc(db, 'users', remoteUid));
-          setRemoteUser(rSnap.data() as UserProfile);
-        }
 
-        // Reset unread count for me
-        await updateDoc(chatRef, {
-          [`unreadCount.${auth.currentUser?.uid}`]: 0
-        });
+          // Fetch owner details to initialize chat
+          const ownerSnap = await getDoc(doc(db, 'users', ownerId));
+          if (!ownerSnap.exists()) {
+            alert("Owner profile not found");
+            navigate('/inbox');
+            return;
+          }
+          const ownerData = ownerSnap.data() as UserProfile;
+          
+          const mySnap = await getDoc(doc(db, 'users', auth.currentUser!.uid));
+          if (!mySnap.exists()) {
+            alert("Please complete your profile to message others");
+            navigate('/profile');
+            return;
+          }
+          const myData = mySnap.data() as UserProfile;
+
+          const newChat: Partial<Chat> = {
+            participants: [auth.currentUser!.uid, ownerId],
+            participantDetails: {
+              [auth.currentUser!.uid]: {
+                displayName: myData.displayName || 'User',
+                photoURL: myData.photoURL || `https://ui-avatars.com/api/?name=${myData.displayName || 'U'}`,
+              },
+              [ownerId]: {
+                displayName: ownerData.displayName || 'Owner',
+                photoURL: ownerData.photoURL || `https://ui-avatars.com/api/?name=${ownerData.displayName || 'O'}`,
+              }
+            },
+            lastTimestamp: serverTimestamp(),
+            unreadCount: {
+              [ownerId]: 0,
+              [auth.currentUser!.uid]: 0,
+            }
+          };
+          await setDoc(chatRef, newChat);
+          setChat({ id: chatId, ...newChat } as Chat);
+          setRemoteUser(ownerData);
+        } else {
+          const cData = { id: chatId, ...chatSnap.data() } as Chat;
+          setChat(cData);
+          
+          // Identify remote user
+          const remoteUid = cData.participants.find(p => p !== auth.currentUser?.uid);
+          if (remoteUid) {
+            const rSnap = await getDoc(doc(db, 'users', remoteUid));
+            if (rSnap.exists()) {
+              setRemoteUser(rSnap.data() as UserProfile);
+            }
+          }
+
+          // Reset unread count for me
+          await updateDoc(chatRef, {
+            [`unreadCount.${auth.currentUser?.uid}`]: 0
+          });
+        }
+      } catch (err) {
+        console.error("Chat initialization error:", err);
+        setLoading(false);
       }
     };
 
@@ -121,6 +138,9 @@ export default function ChatRoom() {
       setMessages(msgs);
       setLoading(false);
       setTimeout(scrollToBottom, 100);
+    }, (err) => {
+      console.error("Messages subscription error:", err);
+      setLoading(false);
     });
 
     return () => unsubscribe();

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { optimizeImage } from '../lib/imageOptimizer';
 import { 
   ChevronLeft, 
   Upload, 
@@ -14,7 +16,8 @@ import {
   Phone,
   DollarSign,
   ShieldCheck,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -44,6 +47,28 @@ export default function AddProperty() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !auth.currentUser) return;
+
+    setUploadingImage(true);
+    try {
+      const optimizedBlob = await optimizeImage(file);
+      const timestamp = Date.now();
+      const fileName = `${auth.currentUser.uid}_${timestamp}.webp`;
+      const storageRef = ref(storage, `properties/${fileName}`);
+      const snapshot = await uploadBytes(storageRef, optimizedBlob);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setImages(prev => [...prev, downloadURL]);
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      alert("Failed to upload image.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleToggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev => 
@@ -267,8 +292,30 @@ export default function AddProperty() {
           </h2>
           
           <div className="flex gap-2 mb-4">
+            <div className="flex-1 relative">
+              <input 
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="property-image-upload"
+                onChange={handleFileChange}
+                disabled={uploadingImage}
+              />
+              <label 
+                htmlFor="property-image-upload"
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl cursor-pointer hover:bg-indigo-100 transition-colors ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin text-indigo-600" /> : <Upload className="w-5 h-5 text-indigo-600" />}
+                <span className="text-sm font-bold text-indigo-600">
+                  {uploadingImage ? 'Optimizing & Uploading...' : 'Upload Image (Optimized)'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mb-4">
             <input 
-              placeholder="Paste image URL here..."
+              placeholder="Or paste image URL here..."
               className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-indigo-100 text-sm"
               value={imageUrlInput}
               onChange={e => setImageUrlInput(e.target.value)}
