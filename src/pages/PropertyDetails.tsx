@@ -106,19 +106,34 @@ export default function PropertyDetails() {
     }
   };
 
-  const handleMessageOwner = async () => {
+  const handleAction = (actionType: 'tel' | 'wa' | 'chat') => {
     if (!auth.currentUser) {
-      alert("Please login to message the owner");
+      // Redirect to profile/login page
+      navigate('/profile');
       return;
     }
-    if (isOwner) {
-      alert("This is your own listing");
+
+    if (actionType === 'chat') {
+      if (isOwner) {
+        alert("This is your own listing");
+        return;
+      }
+      const chatRoomId = [auth.currentUser.uid, property?.ownerId].sort().join('_');
+      navigate(`/chat/${chatRoomId}?ownerId=${property?.ownerId}`);
       return;
     }
+
+    const phone = actionType === 'wa' 
+      ? (property?.ownerWhatsapp || property?.ownerPhone || '') 
+      : (property?.ownerPhone || '');
     
-    // Redirect to chat room (chat ID is usually combo of sorted UIDs)
-    const chatRoomId = [auth.currentUser.uid, property?.ownerId].sort().join('_');
-    navigate(`/chat/${chatRoomId}?ownerId=${property?.ownerId}`);
+    const link = formatPhoneNumber(phone, actionType);
+    
+    if (actionType === 'wa') {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    } else {
+      window.location.href = link;
+    }
   };
 
   const isOwner = auth.currentUser?.uid === property?.ownerId;
@@ -314,22 +329,20 @@ export default function PropertyDetails() {
           <div className="flex gap-3">
             {!isPrivate ? (
               <>
-                <a 
-                  href={formatPhoneNumber(property.ownerPhone, 'tel')}
+                <button 
+                  onClick={() => handleAction('tel')}
                   className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
                 >
                   <Phone className="w-5 h-5 mr-2" />
                   Call
-                </a>
-                <a 
-                  href={formatPhoneNumber(property.ownerWhatsapp || property.ownerPhone, 'wa')}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </button>
+                <button 
+                  onClick={() => handleAction('wa')}
                   className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp
-                </a>
+                </button>
               </>
             ) : (
               <div className="flex-1 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
@@ -341,15 +354,13 @@ export default function PropertyDetails() {
             )}
           </div>
 
-          {!isOwner && (
-            <button 
-              onClick={handleMessageOwner}
-              className="w-full bg-indigo-600 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Message Owner Now
-            </button>
-          )}
+          <button 
+            onClick={() => handleAction('chat')}
+            className="w-full bg-indigo-600 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
+          >
+            <MessageSquare className="w-5 h-5 mr-2" />
+            Message Owner Now
+          </button>
         </div>
       </div>
     </div>
