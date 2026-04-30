@@ -11,6 +11,7 @@ import MyListings from './pages/MyListings';
 import Profile from './pages/Profile';
 import Inbox from './pages/Inbox';
 import Chat from './pages/Chat';
+import SeedData from './pages/SeedData';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Home as HomeIcon, 
@@ -161,6 +162,7 @@ export default function App() {
               <Route path="/profile" element={<div className="pt-16"><Profile /></div>} />
               <Route path="/inbox" element={<div className="pt-16"><Inbox /></div>} />
               <Route path="/chat/:chatId" element={<Chat />} />
+              <Route path="/seed" element={<SeedData />} />
             </Routes>
           </main>
         </div>

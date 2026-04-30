@@ -146,9 +146,16 @@ export default function Inbox() {
                 <MessageSquare className="w-8 h-8" />
               </div>
               <h4 className="font-bold text-gray-900">Your Inbox is Empty</h4>
-              <p className="text-sm text-gray-500 mt-1 max-w-[200px] mx-auto leading-relaxed">
+              <p className="text-sm text-gray-500 mt-1 max-w-[200px] mx-auto leading-relaxed mb-6">
                 Start a conversation by clicking 'Message Owner' on any property listing.
               </p>
+              <button 
+                onClick={() => navigate('/seed')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+              >
+                <Clock className="w-4 h-4" />
+                Seed Test Messages
+              </button>
             </div>
           )}
         </div>
