@@ -39,3 +39,17 @@ export interface FirestoreErrorInfo {
     isAnonymous?: boolean | null;
   }
 }
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  phoneNumber?: string;
+  whatsappNumber?: string;
+  bio?: string;
+  city?: string;
+  area?: string;
+  photoURL?: string;
+  createdAt: any;
+  updatedAt: any;
+}

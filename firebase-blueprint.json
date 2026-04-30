@@ -49,6 +49,25 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "propertyId"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User account details and contact information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "bio": { "type": "string" },
+        "city": { "type": "string" },
+        "area": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
     }
   },
   "firestore": {
@@ -59,6 +78,10 @@
     "/favorites": {
       "schema": "Favorite",
       "description": "Users' bookmarked properties"
+    },
+    "/users": {
+      "schema": "User",
+      "description": "User profile information"
     }
   }
 }

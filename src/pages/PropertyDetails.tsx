@@ -14,7 +14,9 @@ import {
   Share2,
   Home as HomeIcon,
   User,
-  Heart
+  Heart,
+  Pencil,
+  Settings
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
@@ -91,6 +93,8 @@ export default function PropertyDetails() {
     }
   };
 
+  const isOwner = auth.currentUser?.uid === property?.ownerId;
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
@@ -128,6 +132,15 @@ export default function PropertyDetails() {
           Back
         </button>
         <div className="flex gap-2">
+          {isOwner && (
+            <button 
+              onClick={() => navigate(`/edit/${id}`)}
+              className="p-2 bg-indigo-600 text-white rounded-full shadow-lg active:scale-95 transition-all"
+              title="Edit Your Listing"
+            >
+              <Pencil className="w-5 h-5" />
+            </button>
+          )}
           <button 
             disabled={favLoading}
             onClick={toggleFavorite}

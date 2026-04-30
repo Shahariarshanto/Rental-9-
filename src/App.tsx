@@ -5,8 +5,10 @@ import { auth, signInWithGoogle, logout } from './lib/firebase';
 import Home from './pages/Home';
 import PropertyDetails from './pages/PropertyDetails';
 import AddProperty from './pages/AddProperty';
+import EditProperty from './pages/EditProperty';
 import Favorites from './pages/Favorites';
 import MyListings from './pages/MyListings';
+import Profile from './pages/Profile';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Home as HomeIcon, 
@@ -75,6 +77,14 @@ function Navigation() {
                     <p className="text-sm font-bold text-gray-800 truncate">{user?.displayName}</p>
                   </div>
                   <Link 
+                    to="/profile"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    My Profile
+                  </Link>
+                  <Link 
                     to="/my-listings"
                     onClick={() => setShowProfileMenu(false)}
                     className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
@@ -130,8 +140,10 @@ export default function App() {
               <Route path="/" element={<div className="pt-16"><Home /></div>} />
               <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/add" element={<div className="pt-16"><AddProperty /></div>} />
+              <Route path="/edit/:id" element={<div className="pt-16"><EditProperty /></div>} />
               <Route path="/favorites" element={<div className="pt-16"><Favorites /></div>} />
               <Route path="/my-listings" element={<div className="pt-16"><MyListings /></div>} />
+              <Route path="/profile" element={<div className="pt-16"><Profile /></div>} />
             </Routes>
           </main>
         </div>

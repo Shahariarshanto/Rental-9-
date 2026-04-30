@@ -15,6 +15,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isValidUser(data) {
+      return data.displayName is string && data.displayName.size() > 0 && 
+             data.email is string && data.uid == request.auth.uid;
+    }
+
     function isValidProperty(data) {
       return data.title is string && 
              data.category in ['Bachelor', 'Family', 'Office'] &&
@@ -49,6 +54,12 @@ service cloud.firestore {
                       request.resource.data.createdAt == request.time;
       // Allow delete if user is owner
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.updatedAt == request.time;
     }
   }
 }

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { 
   ChevronLeft, 
   Upload, 
@@ -14,22 +13,27 @@ import {
   Phone,
   DollarSign,
   ShieldCheck,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Property, PropertyCategory } from '../types';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 
-const CATEGORIES = ['Bachelor', 'Family', 'Office'] as const;
+const CATEGORIES: PropertyCategory[] = ['Bachelor', 'Family', 'Office'];
 const AMENITIES = [
   'Lift', 'Generator', 'Gas (Cylinder)', 'Gas (Line)', 
   'Parking', 'Security', 'Internet', 'Balcony', 'AC', 'CCTV'
 ];
 
-export default function AddProperty() {
+export default function EditProperty() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Family' as typeof CATEGORIES[number],
+    category: 'Family' as PropertyCategory,
     description: '',
     rent: '',
     deposit: '',
@@ -44,6 +48,54 @@ export default function AddProperty() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!id) return;
+      try {
+        const docRef = doc(db, 'properties', id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data() as Property;
+          
+          // Permission check
+          if (data.ownerId !== auth.currentUser?.uid) {
+            alert("You don't have permission to edit this listing");
+            navigate('/my-listings');
+            return;
+          }
+
+          setFormData({
+            title: data.title,
+            category: data.category,
+            description: data.description,
+            rent: data.rent.toString(),
+            deposit: data.deposit.toString(),
+            utilityDetails: data.utilityDetails || '',
+            city: data.city,
+            area: data.area,
+            address: data.address,
+            ownerName: data.ownerName,
+            ownerPhone: data.ownerPhone,
+            ownerWhatsapp: data.ownerWhatsapp || '',
+          });
+          setSelectedAmenities(data.amenities || []);
+          setImages(data.images || []);
+        } else {
+          alert("Property not found");
+          navigate('/my-listings');
+        }
+      } catch (error) {
+        console.error("Error fetching property:", error);
+        handleFirestoreError(error, OperationType.GET, `properties/${id}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperty();
+  }, [id, navigate]);
 
   const handleToggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev => 
@@ -60,31 +112,38 @@ export default function AddProperty() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) {
-      alert("Please login to list your property");
-      return;
-    }
+    if (!auth.currentUser || !id) return;
 
-    setLoading(true);
+    setSaving(true);
     try {
-      await addDoc(collection(db, 'properties'), {
+      const docRef = doc(db, 'properties', id);
+      await updateDoc(docRef, {
         ...formData,
         rent: Number(formData.rent),
         deposit: Number(formData.deposit),
         amenities: selectedAmenities,
         images,
-        ownerId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      navigate('/');
+      navigate('/my-listings');
     } catch (error) {
-      console.error("Error adding property:", error);
-      handleFirestoreError(error, OperationType.CREATE, 'properties');
+      console.error("Error updating property:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `properties/${id}`);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Loading property details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -92,7 +151,7 @@ export default function AddProperty() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-500">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="flex-1 text-center font-bold text-gray-900 mr-8">Add New Property</h1>
+        <h1 className="flex-1 text-center font-bold text-gray-900 mr-8">Edit Property Listing</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -357,10 +416,10 @@ export default function AddProperty() {
 
         <button 
           type="submit" 
-          disabled={loading || images.length === 0}
+          disabled={saving || images.length === 0}
           className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:shadow-none"
         >
-          {loading ? "Posting Listing..." : "Post Property Listing"}
+          {saving ? "Saving Changes..." : "Update Property Listing"}
         </button>
       </form>
     </div>

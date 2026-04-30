@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { Property } from '../types';
-import { MapPin, Home as HomeIcon, Settings, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
+import { MapPin, Home as HomeIcon, Settings, Trash2, ExternalLink, AlertCircle, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
@@ -32,6 +33,7 @@ export default function MyListings() {
       setLoading(false);
     }, (error) => {
       console.error("Error fetching my listings:", error);
+      handleFirestoreError(error, OperationType.LIST, 'properties');
       setLoading(false);
     });
 
@@ -44,7 +46,7 @@ export default function MyListings() {
       setDeleteConfirm(null);
     } catch (e) {
       console.error("Delete error:", e);
-      alert("Failed to delete listing.");
+      handleFirestoreError(e, OperationType.DELETE, `properties/${id}`);
     }
   };
 
@@ -105,6 +107,13 @@ export default function MyListings() {
                 </div>
 
                 <div className="flex gap-2">
+                  <Link 
+                    to={`/edit/${p.id}`} 
+                    className="p-2 bg-indigo-50 text-indigo-400 rounded-lg hover:text-indigo-600"
+                    title="Edit Listing"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </Link>
                   <Link 
                     to={`/property/${p.id}`} 
                     className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:text-indigo-600"
