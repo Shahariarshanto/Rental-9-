@@ -1,0 +1,6 @@
+{
+  "name": "BariVara - House Rental Finder",
+  "description": "A lightweight, mobile-friendly house rental platform connecting homeowners and tenants with advanced filtering and easy listing management.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}

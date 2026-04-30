@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Property": {
+      "title": "Property Listing",
+      "description": "Details of a house/flat for rent",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["Bachelor", "Family", "Office"] },
+        "description": { "type": "string" },
+        "rent": { "type": "number" },
+        "deposit": { "type": "number" },
+        "utilityDetails": { "type": "string" },
+        "city": { "type": "string" },
+        "area": { "type": "string" },
+        "address": { "type": "string" },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "amenities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "images": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ownerId": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "ownerPhone": { "type": "string" },
+        "ownerWhatsapp": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "rent", "city", "area", "ownerId"]
+    },
+    "Favorite": {
+      "title": "Favorite Listing",
+      "description": "A property saved by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "propertyId"]
+    }
+  },
+  "firestore": {
+    "/properties": {
+      "schema": "Property",
+      "description": "Public property listings"
+    },
+    "/favorites": {
+      "schema": "Favorite",
+      "description": "Users' bookmarked properties"
+    }
+  }
+}
