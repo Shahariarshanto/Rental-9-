@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, signInWithGoogle } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage, signInWithGoogle } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
+import { optimizeImage } from '../lib/imageOptimizer';
 import { 
   User as UserIcon, 
   Mail, 
@@ -29,6 +31,8 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -100,6 +104,37 @@ export default function Profile() {
 
     fetchProfile();
   }, [navigate]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !auth.currentUser) return;
+
+    setUploadingImage(true);
+    try {
+      const optimizedBlob = await optimizeImage(file, 400, 400, 0.7); // Smaller for profile pics
+      const fileName = `profiles/${auth.currentUser.uid}_${Date.now()}.webp`;
+      const storageRef = ref(storage, fileName);
+      const snapshot = await uploadBytes(storageRef, optimizedBlob);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setFormData(prev => ({ ...prev, photoURL: downloadURL }));
+      
+      // If we are not in editing mode, update immediately
+      if (!isEditing) {
+        const docRef = doc(db, 'users', auth.currentUser.uid);
+        await updateDoc(docRef, {
+          photoURL: downloadURL,
+          updatedAt: serverTimestamp(),
+        });
+        setProfile(prev => prev ? { ...prev, photoURL: downloadURL } : null);
+      }
+    } catch (error) {
+      console.error("Profile pic upload failed:", error);
+      alert("Failed to upload profile picture.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,17 +218,34 @@ export default function Profile() {
         {/* Profile Card */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-50 shadow-inner mb-4">
+            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-50 shadow-inner mb-4 relative">
               <OptimizedImage 
-                src={profile?.photoURL || "https://ui-avatars.com/api/?name=" + profile?.displayName} 
+                src={profile?.photoURL || formData.photoURL || "https://ui-avatars.com/api/?name=" + profile?.displayName} 
                 alt="Profile" 
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity ${uploadingImage ? 'opacity-30' : 'opacity-100'}`}
                 fallbackSrc="https://ui-avatars.com/api/?name=User"
               />
+              {uploadingImage && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+                </div>
+              )}
             </div>
-            <button className="absolute bottom-4 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg border-2 border-white">
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="absolute bottom-4 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-lg border-2 border-white hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
+            >
               <Camera className="w-3.5 h-3.5" />
             </button>
+            <input 
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
           
           <h2 className="text-xl font-bold text-gray-900">{profile?.displayName}</h2>
@@ -285,15 +337,29 @@ export default function Profile() {
               className="bg-white rounded-3xl p-6 shadow-xl space-y-5 border border-gray-100"
             >
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Profile Picture URL</label>
-                <div className="relative">
-                  <Camera className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input 
-                    placeholder="Paste image URL here..."
-                    className="w-full bg-gray-50 border-none rounded-2xl py-3.5 pl-11 pr-4 text-sm font-medium focus:ring-2 focus:ring-indigo-100"
-                    value={formData.photoURL}
-                    onChange={e => setFormData(p => ({ ...p, photoURL: e.target.value }))}
-                  />
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Profile Picture</label>
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white border border-gray-100 shrink-0">
+                    <img 
+                      src={formData.photoURL || "https://ui-avatars.com/api/?name=User"} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-gray-900 mb-1">
+                      {uploadingImage ? 'Uploading...' : 'Tap to change photo'}
+                    </p>
+                    <p className="text-[10px] text-gray-500">JPG, PNG or WebP</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="px-4 py-2 bg-white text-indigo-600 text-xs font-bold rounded-xl border border-indigo-100 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                  >
+                    {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Choose File'}
+                  </button>
                 </div>
               </div>
 

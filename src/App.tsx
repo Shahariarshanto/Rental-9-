@@ -12,7 +12,6 @@ import MyListings from './pages/MyListings';
 import Profile from './pages/Profile';
 import Inbox from './pages/Inbox';
 import Chat from './pages/Chat';
-import SeedData from './pages/SeedData';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Home as HomeIcon, 
@@ -170,19 +169,41 @@ function Navigation() {
             <PlusSquare className="w-6 h-6" />
             <span className="text-[10px] font-bold">Post</span>
           </Link>
-          <Link to="/inbox" className={`flex flex-col items-center gap-1 ${location.pathname === '/inbox' ? 'text-indigo-600' : 'text-gray-400'} relative`}>
-            <MessageSquare className="w-6 h-6" />
-            <span className="text-[10px] font-bold">Messages</span>
-            {totalUnread > 0 && (
-              <span className="absolute -top-1 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
-                {totalUnread > 9 ? '9+' : totalUnread}
-              </span>
-            )}
-          </Link>
-          <Link to="/my-listings" className={`flex flex-col items-center gap-1 ${location.pathname === '/my-listings' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <List className="w-6 h-6" />
-            <span className="text-[10px] font-bold">My List</span>
-          </Link>
+          
+          {user ? (
+            <>
+              <Link to="/inbox" className={`flex flex-col items-center gap-1 ${location.pathname === '/inbox' ? 'text-indigo-600' : 'text-gray-400'} relative`}>
+                <MessageSquare className="w-6 h-6" />
+                <span className="text-[10px] font-bold">Messages</span>
+                {totalUnread > 0 && (
+                  <span className="absolute -top-1 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                    {totalUnread > 9 ? '9+' : totalUnread}
+                  </span>
+                )}
+              </Link>
+              <Link to="/my-listings" className={`flex flex-col items-center gap-1 ${location.pathname === '/my-listings' ? 'text-indigo-600' : 'text-gray-400'}`}>
+                <List className="w-6 h-6" />
+                <span className="text-[10px] font-bold">My List</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={signInWithGoogle}
+                className="flex flex-col items-center gap-1 text-gray-400 hover:text-indigo-600 transition-colors"
+              >
+                <LogIn className="w-6 h-6" />
+                <span className="text-[10px] font-bold">Login</span>
+              </button>
+              <button 
+                onClick={signInWithGoogle}
+                className="flex flex-col items-center gap-1 text-gray-400 hover:text-indigo-600 transition-colors"
+              >
+                <Heart className="w-6 h-6" />
+                <span className="text-[10px] font-bold">Favorites</span>
+              </button>
+            </>
+          )}
         </nav>
       )}
     </>
@@ -206,7 +227,6 @@ export default function App() {
               <Route path="/profile" element={<div className="pt-16"><Profile /></div>} />
               <Route path="/inbox" element={<div className="pt-16"><Inbox /></div>} />
               <Route path="/chat/:chatId" element={<Chat />} />
-              <Route path="/seed" element={<SeedData />} />
             </Routes>
           </main>
         </div>
