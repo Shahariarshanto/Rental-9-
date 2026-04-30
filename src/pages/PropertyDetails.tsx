@@ -117,6 +117,8 @@ export default function PropertyDetails() {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Header Bar (Transparent overlay on mobile) */}
+      <div className="fixed top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-40" />
+      
       <div className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
         <button 
           onClick={() => navigate(-1)}
