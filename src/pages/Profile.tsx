@@ -38,6 +38,7 @@ export default function Profile() {
     city: '',
     area: '',
     photoURL: '',
+    contactPrivacy: 'Public' as 'Public' | 'Private',
   });
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function Profile() {
             city: data.city || '',
             area: data.area || '',
             photoURL: data.photoURL || '',
+            contactPrivacy: data.contactPrivacy || 'Public',
           });
         } else {
           // Initialize profile from auth if first time
@@ -70,6 +72,7 @@ export default function Profile() {
             displayName: auth.currentUser.displayName || 'Guest User',
             email: auth.currentUser.email || '',
             photoURL: auth.currentUser.photoURL || '',
+            contactPrivacy: 'Public',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           };
@@ -83,6 +86,7 @@ export default function Profile() {
             city: '',
             area: '',
             photoURL: newProfile.photoURL || '',
+            contactPrivacy: 'Public',
           });
         }
       } catch (error) {
@@ -321,6 +325,30 @@ export default function Profile() {
                     value={formData.area}
                     onChange={e => setFormData(p => ({ ...p, area: e.target.value }))}
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Contact Privacy</label>
+                <div className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">
+                      {formData.contactPrivacy === 'Public' ? 'Public Profile' : 'Private Profile'}
+                    </p>
+                    <p className="text-[10px] text-gray-500">
+                      {formData.contactPrivacy === 'Public' 
+                        ? 'Users can see your phone and WhatsApp' 
+                        : 'Contact details are hidden; users must message you in-app'}
+                    </p>
+                  </div>
+                  <select 
+                    className="bg-white border-2 border-gray-100 rounded-xl py-1.5 px-3 text-xs font-bold focus:ring-2 focus:ring-indigo-100 outline-none"
+                    value={formData.contactPrivacy}
+                    onChange={e => setFormData(p => ({ ...p, contactPrivacy: e.target.value as 'Public' | 'Private' }))}
+                  >
+                    <option value="Public">Public</option>
+                    <option value="Private">Private</option>
+                  </select>
                 </div>
               </div>
 

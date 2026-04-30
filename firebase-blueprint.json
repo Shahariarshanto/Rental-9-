@@ -64,10 +64,37 @@
         "city": { "type": "string" },
         "area": { "type": "string" },
         "photoURL": { "type": "string" },
+        "contactPrivacy": { "type": "string", "enum": ["Public", "Private"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
+    },
+    "Chat": {
+      "title": "Conversation",
+      "description": "Real-time communication between two users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastSenderId": { "type": "string" },
+        "lastTimestamp": { "type": "string", "format": "date-time" },
+        "unreadCount": { "type": "object" }
+      },
+      "required": ["participants", "lastTimestamp"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "An individual message within a conversation",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["senderId", "text", "createdAt"]
     }
   },
   "firestore": {
@@ -82,6 +109,14 @@
     "/users": {
       "schema": "User",
       "description": "User profile information"
+    },
+    "/chats": {
+      "schema": "Chat",
+      "description": "User conversations"
+    },
+    "/chats/{chatId}/messages": {
+      "schema": "Message",
+      "description": "Individual messages in a chat"
     }
   }
 }

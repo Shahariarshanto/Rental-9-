@@ -50,6 +50,32 @@ export interface UserProfile {
   city?: string;
   area?: string;
   photoURL?: string;
+  contactPrivacy: 'Public' | 'Private';
   createdAt: any;
   updatedAt: any;
+}
+
+export interface Chat {
+  id: string;
+  participants: string[]; // [uid1, uid2]
+  participantDetails: {
+    [uid: string]: {
+      displayName: string;
+      photoURL: string;
+    }
+  };
+  lastMessage?: string;
+  lastSenderId?: string;
+  lastTimestamp: any;
+  unreadCount?: {
+    [uid: string]: number;
+  };
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  createdAt: any;
+  isRead: boolean;
 }

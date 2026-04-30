@@ -16,29 +16,41 @@ import {
   User,
   Heart,
   Pencil,
-  Settings
+  Settings,
+  MessageSquare,
+  ShieldAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatCurrency, formatPhoneNumber } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import OptimizedImage from '../components/OptimizedImage';
+import { UserProfile } from '../types';
 
 export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
+  const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchProperty() {
+    async function fetchData() {
       if (!id) return;
       try {
         const docRef = doc(db, 'properties', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setProperty({ id: docSnap.id, ...docSnap.data() } as Property);
+          const pData = { id: docSnap.id, ...docSnap.data() } as Property;
+          setProperty(pData);
+
+          // Fetch owner profile for privacy setting
+          const ownerRef = doc(db, 'users', pData.ownerId);
+          const ownerSnap = await getDoc(ownerRef);
+          if (ownerSnap.exists()) {
+            setOwnerProfile(ownerSnap.data() as UserProfile);
+          }
         }
 
         // Check if favorite
@@ -53,7 +65,7 @@ export default function PropertyDetails() {
         setLoading(false);
       }
     }
-    fetchProperty();
+    fetchData();
   }, [id]);
 
   const toggleFavorite = async () => {
@@ -94,7 +106,23 @@ export default function PropertyDetails() {
     }
   };
 
+  const handleMessageOwner = async () => {
+    if (!auth.currentUser) {
+      alert("Please login to message the owner");
+      return;
+    }
+    if (isOwner) {
+      alert("This is your own listing");
+      return;
+    }
+    
+    // Redirect to chat room (chat ID is usually combo of sorted UIDs)
+    const chatRoomId = [auth.currentUser.uid, property?.ownerId].sort().join('_');
+    navigate(`/chat/${chatRoomId}?ownerId=${property?.ownerId}`);
+  };
+
   const isOwner = auth.currentUser?.uid === property?.ownerId;
+  const isPrivate = ownerProfile?.contactPrivacy === 'Private';
 
   if (loading) {
     return (
@@ -281,23 +309,47 @@ export default function PropertyDetails() {
 
       {/* Floating Action Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white to-transparent pt-8 z-40">
-        <div className="max-w-3xl mx-auto flex gap-3">
-          <a 
-            href={formatPhoneNumber(property.ownerPhone, 'tel')}
-            className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
-          >
-            <Phone className="w-5 h-5 mr-2" />
-            Call Owner
-          </a>
-          <a 
-            href={formatPhoneNumber(property.ownerWhatsapp || property.ownerPhone, 'wa')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            WhatsApp
-          </a>
+        <div className="max-w-3xl mx-auto flex flex-col gap-3">
+          {/* Main Action Group */}
+          <div className="flex gap-3">
+            {!isPrivate ? (
+              <>
+                <a 
+                  href={formatPhoneNumber(property.ownerPhone, 'tel')}
+                  className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
+                >
+                  <Phone className="w-5 h-5 mr-2" />
+                  Call
+                </a>
+                <a 
+                  href={formatPhoneNumber(property.ownerWhatsapp || property.ownerPhone, 'wa')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  WhatsApp
+                </a>
+              </>
+            ) : (
+              <div className="flex-1 bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
+                 <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                 <p className="text-[10px] font-bold text-amber-800 leading-tight">
+                   Contact details are hidden for privacy. Please use the messaging system to connect with the owner safely.
+                 </p>
+              </div>
+            )}
+          </div>
+
+          {!isOwner && (
+            <button 
+              onClick={handleMessageOwner}
+              className="w-full bg-indigo-600 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Message Owner Now
+            </button>
+          )}
         </div>
       </div>
     </div>

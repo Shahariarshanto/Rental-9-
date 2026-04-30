@@ -9,6 +9,8 @@ import EditProperty from './pages/EditProperty';
 import Favorites from './pages/Favorites';
 import MyListings from './pages/MyListings';
 import Profile from './pages/Profile';
+import Inbox from './pages/Inbox';
+import Chat from './pages/Chat';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Home as HomeIcon, 
@@ -16,6 +18,7 @@ import {
   PlusSquare, 
   User as UserIcon, 
   LogOut,
+  MessageSquare,
   LogIn,
   Heart,
   List
@@ -85,6 +88,14 @@ function Navigation() {
                     My Profile
                   </Link>
                   <Link 
+                    to="/inbox"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Messages
+                  </Link>
+                  <Link 
                     to="/my-listings"
                     onClick={() => setShowProfileMenu(false)}
                     className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
@@ -120,6 +131,10 @@ function Navigation() {
           <PlusSquare className="w-6 h-6" />
           <span className="text-[10px] font-bold">Post</span>
         </Link>
+        <Link to="/inbox" className={`flex flex-col items-center gap-1 ${location.pathname === '/inbox' ? 'text-indigo-600' : 'text-gray-400'}`}>
+          <MessageSquare className="w-6 h-6" />
+          <span className="text-[10px] font-bold">Messages</span>
+        </Link>
         <Link to="/my-listings" className={`flex flex-col items-center gap-1 ${location.pathname === '/my-listings' ? 'text-indigo-600' : 'text-gray-400'}`}>
           <List className="w-6 h-6" />
           <span className="text-[10px] font-bold">My List</span>
@@ -144,6 +159,8 @@ export default function App() {
               <Route path="/favorites" element={<div className="pt-16"><Favorites /></div>} />
               <Route path="/my-listings" element={<div className="pt-16"><MyListings /></div>} />
               <Route path="/profile" element={<div className="pt-16"><Profile /></div>} />
+              <Route path="/inbox" element={<div className="pt-16"><Inbox /></div>} />
+              <Route path="/chat/:chatId" element={<Chat />} />
             </Routes>
           </main>
         </div>
