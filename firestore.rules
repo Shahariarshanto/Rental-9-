@@ -23,19 +23,17 @@ service cloud.firestore {
       return data.title is string && data.title.size() <= 150 &&
              data.category in ['Bachelor', 'Family', 'Office'] &&
              data.rent is number && data.rent >= 0 &&
-             data.deposit is number && data.deposit >= 0 &&
+             data.get('deposit', 0) is number &&
              data.city is string && data.city.size() <= 100 &&
              data.area is string && data.area.size() <= 100 &&
-             data.address is string && data.address.size() <= 500 &&
-             data.description is string && data.description.size() <= 3000 &&
-             data.ownerId is string && data.ownerId.size() <= 128 &&
-             data.ownerName is string && data.ownerName.size() <= 150 &&
-             data.ownerPhone is string && data.ownerPhone.size() <= 30 &&
-             (data.ownerWhatsapp == null || data.ownerWhatsapp == "" || (data.ownerWhatsapp is string && data.ownerWhatsapp.size() <= 30)) &&
-             (data.utilityDetails == null || data.utilityDetails == "" || (data.utilityDetails is string && data.utilityDetails.size() <= 1000)) &&
-             data.amenities is list && data.amenities.size() <= 40 &&
-             (data.images == null || (data.images is list && data.images.size() <= 20)) &&
-             (data.isFeatured == null || data.isFeatured is bool);
+             data.get('address', '') is string &&
+             data.get('description', '') is string &&
+             data.ownerId is string &&
+             data.ownerName is string &&
+             data.ownerPhone is string &&
+             data.amenities is list &&
+             (data.get('images', []) is list) &&
+             (data.get('isFeatured', false) is bool);
     }
 
     match /properties/{propertyId} {
@@ -45,22 +43,21 @@ service cloud.firestore {
                       isValidId(propertyId) && 
                       isValidProperty(request.resource.data) &&
                       request.resource.data.ownerId == request.auth.uid &&
-                      request.resource.data.createdAt == request.time;
+                      request.resource.data.get('createdAt', request.time) == request.time;
 
       allow update: if isOwner(resource.data.ownerId) &&
                       isValidProperty(request.resource.data) &&
                       request.resource.data.ownerId == resource.data.ownerId &&
-                      request.resource.data.createdAt == resource.data.createdAt &&
-                      request.resource.data.updatedAt == request.time;
+                      request.resource.data.get('createdAt', resource.data.createdAt) == resource.data.createdAt &&
+                      request.resource.data.get('updatedAt', request.time) == request.time;
       
       allow delete: if isOwner(resource.data.ownerId);
     }
 
     match /favorites/{favoriteId} {
-      allow read: if isSignedIn() && (favoriteId.startsWith(request.auth.uid) || resource.data.userId == request.auth.uid);
-      allow create: if isOwner(request.resource.data.userId) && 
-                      request.resource.data.createdAt == request.time;
-      allow delete: if isOwner(resource.data.userId);
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow delete: if isSignedIn() && isOwner(resource.data.userId);
     }
   }
 }
