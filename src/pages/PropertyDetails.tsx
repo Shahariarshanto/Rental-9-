@@ -147,12 +147,40 @@ export default function PropertyDetails() {
       </div>
 
       {/* Image Gallery (Simple Slider/Main Image) */}
-      <div className="relative h-[40vh] md:h-[60vh] bg-gray-100">
-        {property.images && property.images.length > 0 ? (
-          <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <HomeIcon className="w-20 h-20" />
+      <div className="relative bg-gray-100">
+        <div className="h-[40vh] md:h-[60vh] relative overflow-hidden">
+          {property.images && property.images.length > 0 ? (
+            <img 
+              src={property.images[0]} 
+              alt={property.title} 
+              className="w-full h-full object-cover" 
+              loading="lazy" 
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300">
+              <HomeIcon className="w-20 h-20" />
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Gallery (if more than 1 image) */}
+        {property.images && property.images.length > 1 && (
+          <div className="absolute bottom-12 left-0 right-0 px-4 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 pb-2">
+              {property.images.map((img, index) => (
+                <div 
+                  key={index} 
+                  className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-lg pointer-events-auto"
+                >
+                  <img 
+                    src={img} 
+                    alt={`${property.title} - view ${index + 1}`} 
+                    className="w-full h-full object-cover" 
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

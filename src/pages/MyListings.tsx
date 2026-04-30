@@ -87,7 +87,7 @@ export default function MyListings() {
               >
                 <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
                   {p.images?.[0] ? (
-                    <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
+                    <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <HomeIcon className="w-8 h-8" />
