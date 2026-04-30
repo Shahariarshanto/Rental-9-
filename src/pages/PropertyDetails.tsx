@@ -19,7 +19,7 @@ import {
   Settings
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, formatPhoneNumber } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import OptimizedImage from '../components/OptimizedImage';
 
@@ -283,14 +283,16 @@ export default function PropertyDetails() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white to-transparent pt-8 z-40">
         <div className="max-w-3xl mx-auto flex gap-3">
           <a 
-            href={`tel:${property.ownerPhone}`}
+            href={formatPhoneNumber(property.ownerPhone, 'tel')}
             className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
           >
             <Phone className="w-5 h-5 mr-2" />
             Call Owner
           </a>
           <a 
-            href={`https://wa.me/${property.ownerWhatsapp || property.ownerPhone.replace(/\D/g, '')}`}
+            href={formatPhoneNumber(property.ownerWhatsapp || property.ownerPhone, 'wa')}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl flex items-center justify-center font-bold shadow-lg active:scale-95 transition-transform"
           >
             <MessageCircle className="w-5 h-5 mr-2" />

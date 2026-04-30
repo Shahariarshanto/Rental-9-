@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
 import OptimizedImage from '../components/OptimizedImage';
+import { formatPhoneNumber } from '../lib/utils';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -182,25 +183,33 @@ export default function Profile() {
               className="space-y-4"
             >
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <a 
+                  href={profile?.phoneNumber ? formatPhoneNumber(profile.phoneNumber, 'tel') : '#'}
+                  className={`flex items-center gap-4 group ${!profile?.phoneNumber && 'pointer-events-none'}`}
+                >
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <Phone className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</p>
                     <p className="text-sm font-bold text-gray-900">{profile?.phoneNumber || "Not provided"}</p>
                   </div>
-                </div>
+                </a>
 
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                <a 
+                  href={profile?.whatsappNumber || profile?.phoneNumber ? formatPhoneNumber(profile?.whatsappNumber || profile?.phoneNumber || '', 'wa') : '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-4 group ${(!profile?.whatsappNumber && !profile?.phoneNumber) && 'pointer-events-none'}`}
+                >
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <MessageSquare className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">WhatsApp</p>
-                    <p className="text-sm font-bold text-gray-900">{profile?.whatsappNumber || "Not provided"}</p>
+                    <p className="text-sm font-bold text-gray-900">{profile?.whatsappNumber || profile?.phoneNumber || "Not provided"}</p>
                   </div>
-                </div>
+                </a>
 
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
