@@ -131,9 +131,10 @@ export default function HomePage() {
   };
 
   const handleSeed = async () => {
+    if (!auth.currentUser) return;
     setSeeding(true);
     try {
-      await seedDatabase();
+      await seedDatabase(auth.currentUser.uid);
     } catch (e) {
       console.error(e);
     } finally {
@@ -165,8 +166,8 @@ export default function HomePage() {
       setProperties(sortedDocs);
       setLoading(false);
 
-      // Auto-seed if database is empty on initial load
-      if (snapshot.empty && !seeding) {
+      // Auto-seed if database is empty on initial load and user is logged in
+      if (snapshot.empty && !seeding && auth.currentUser) {
         handleSeed();
       }
     }, (error) => {

@@ -231,11 +231,12 @@ const DUMMY_PROPERTIES = [
   }
 ];
 
-export const seedDatabase = async () => {
+export const seedDatabase = async (ownerId: string) => {
   const propertiesCol = collection(db, 'properties');
   const promises = DUMMY_PROPERTIES.map(prop => 
     addDoc(propertiesCol, {
       ...prop,
+      ownerId, // Use the provided ownerId (authenticated user)
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
