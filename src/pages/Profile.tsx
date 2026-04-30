@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db, signInWithGoogle } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { 
   User as UserIcon, 
@@ -15,7 +15,8 @@ import {
   Loader2,
   ChevronLeft,
   MessageSquare,
-  Shield
+  Shield,
+  LogIn
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
@@ -44,7 +45,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!auth.currentUser) {
-        navigate('/');
+        setLoading(false);
         return;
       }
 
@@ -126,6 +127,43 @@ export default function Profile() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!auth.currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col pt-16">
+        <div className="bg-white sticky top-0 z-40 border-b border-gray-100 px-4 h-16 flex items-center justify-between">
+          <button onClick={() => navigate('/')} className="p-2 -ml-2 text-gray-500">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <h1 className="font-bold text-gray-900 tracking-tight">Login Required</h1>
+          <div className="w-10"></div>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center -mt-20 px-6 text-center">
+          <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-100 animate-bounce">
+            <LogIn className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900 mb-2">Join BariVara</h2>
+          <p className="text-gray-500 text-sm max-w-[280px] leading-relaxed mb-10 font-medium">
+            Login to message owners, save your favorite listings, and post your own property.
+          </p>
+          <button 
+            onClick={signInWithGoogle}
+            className="w-full max-w-xs flex items-center justify-center gap-3 bg-white border-2 border-gray-100 py-4 rounded-2xl shadow-sm hover:shadow-lg active:scale-95 transition-all text-sm font-black text-gray-900"
+          >
+            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
+            Continue with Google
+          </button>
+          <button 
+            onClick={() => navigate('/')}
+            className="mt-6 text-sm font-bold text-gray-400 hover:text-indigo-600 transition-colors"
+          >
+            Back to Home
+          </button>
+        </div>
       </div>
     );
   }

@@ -114,12 +114,16 @@ export default function PropertyDetails() {
     }
 
     if (actionType === 'chat') {
+      if (!property?.ownerId) {
+        alert("Listing owner information is missing.");
+        return;
+      }
       if (isOwner) {
         alert("This is your own listing");
         return;
       }
-      const chatRoomId = [auth.currentUser.uid, property?.ownerId].sort().join('_');
-      navigate(`/chat/${chatRoomId}?ownerId=${property?.ownerId}`);
+      const chatRoomId = [auth.currentUser.uid, property.ownerId].sort().join('_');
+      navigate(`/chat/${chatRoomId}?ownerId=${property.ownerId}`);
       return;
     }
 
