@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, signInWithGoogle, logout } from './lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { auth, db, signInWithGoogle, logout } from './lib/firebase';
 import Home from './pages/Home';
 import PropertyDetails from './pages/PropertyDetails';
 import AddProperty from './pages/AddProperty';
@@ -28,20 +29,49 @@ import { motion, AnimatePresence } from 'motion/react';
 
 function Navigation() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [totalUnread, setTotalUnread] = useState(0);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
     });
-    return () => unsubscribe();
+
+    return () => unsubscribeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setTotalUnread(0);
+      return;
+    }
+
+    const chatsQuery = query(
+      collection(db, 'chats'),
+      where('participants', 'array-contains', user.uid)
+    );
+
+    const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => {
+      let unread = 0;
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        unread += data.unreadCount?.[user.uid] || 0;
+      });
+      setTotalUnread(unread);
+    });
+
+    return () => unsubscribeChats();
+  }, [user]);
+
+  // Hide nav on Chat pages to prevent overlap and maximize space
+  const isChatPage = location.pathname.startsWith('/chat/');
 
   return (
     <>
       {/* Top Navbar */}
-      {!location.pathname.startsWith('/property/') && (
+      {!location.pathname.startsWith('/property/') && !isChatPage && (
         <header className="bg-white border-b border-gray-100 fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-100">
@@ -91,10 +121,17 @@ function Navigation() {
                   <Link 
                     to="/inbox"
                     onClick={() => setShowProfileMenu(false)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
+                    className="w-full flex items-center justify-between px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold"
                   >
-                    <MessageSquare className="w-4 h-4" />
-                    Messages
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="w-4 h-4" />
+                      Messages
+                    </div>
+                    {totalUnread > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                        {totalUnread}
+                      </span>
+                    )}
                   </Link>
                   <Link 
                     to="/my-listings"
@@ -119,28 +156,35 @@ function Navigation() {
       )}
 
       {/* Bottom Mobile Nav */}
-      <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-100 h-16 flex justify-around items-center px-6 z-40 pb-safe">
-        <Link to="/" className={`flex flex-col items-center gap-1 ${location.pathname === '/' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <Search className="w-6 h-6" />
-          <span className="text-[10px] font-bold">Search</span>
-        </Link>
-        <Link to="/favorites" className={`flex flex-col items-center gap-1 ${location.pathname === '/favorites' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <Heart className="w-6 h-6" />
-          <span className="text-[10px] font-bold">Saved</span>
-        </Link>
-        <Link to="/add" className={`flex flex-col items-center gap-1 ${location.pathname === '/add' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <PlusSquare className="w-6 h-6" />
-          <span className="text-[10px] font-bold">Post</span>
-        </Link>
-        <Link to="/inbox" className={`flex flex-col items-center gap-1 ${location.pathname === '/inbox' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <MessageSquare className="w-6 h-6" />
-          <span className="text-[10px] font-bold">Messages</span>
-        </Link>
-        <Link to="/my-listings" className={`flex flex-col items-center gap-1 ${location.pathname === '/my-listings' ? 'text-indigo-600' : 'text-gray-400'}`}>
-          <List className="w-6 h-6" />
-          <span className="text-[10px] font-bold">My List</span>
-        </Link>
-      </nav>
+      {!isChatPage && (
+        <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-100 h-16 flex justify-around items-center px-6 z-40 pb-safe">
+          <Link to="/" className={`flex flex-col items-center gap-1 ${location.pathname === '/' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <Search className="w-6 h-6" />
+            <span className="text-[10px] font-bold">Search</span>
+          </Link>
+          <Link to="/favorites" className={`flex flex-col items-center gap-1 ${location.pathname === '/favorites' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <Heart className="w-6 h-6" />
+            <span className="text-[10px] font-bold">Saved</span>
+          </Link>
+          <Link to="/add" className={`flex flex-col items-center gap-1 ${location.pathname === '/add' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <PlusSquare className="w-6 h-6" />
+            <span className="text-[10px] font-bold">Post</span>
+          </Link>
+          <Link to="/inbox" className={`flex flex-col items-center gap-1 ${location.pathname === '/inbox' ? 'text-indigo-600' : 'text-gray-400'} relative`}>
+            <MessageSquare className="w-6 h-6" />
+            <span className="text-[10px] font-bold">Messages</span>
+            {totalUnread > 0 && (
+              <span className="absolute -top-1 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                {totalUnread > 9 ? '9+' : totalUnread}
+              </span>
+            )}
+          </Link>
+          <Link to="/my-listings" className={`flex flex-col items-center gap-1 ${location.pathname === '/my-listings' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <List className="w-6 h-6" />
+            <span className="text-[10px] font-bold">My List</span>
+          </Link>
+        </nav>
+      )}
     </>
   );
 }

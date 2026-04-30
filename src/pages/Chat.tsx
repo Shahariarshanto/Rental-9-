@@ -49,6 +49,10 @@ export default function ChatRoom() {
   };
 
   useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
     if (!auth.currentUser || !chatId) return;
 
     // 1. Fetch/Create Chat Metadata
@@ -137,7 +141,6 @@ export default function ChatRoom() {
       const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message));
       setMessages(msgs);
       setLoading(false);
-      setTimeout(scrollToBottom, 100);
     }, (err) => {
       console.error("Messages subscription error:", err);
       setLoading(false);
@@ -171,8 +174,6 @@ export default function ChatRoom() {
         lastTimestamp: serverTimestamp(),
         [`unreadCount.${remoteUid}`]: increment(1)
       });
-
-      scrollToBottom();
     } catch (err) {
       console.error("Message send error:", err);
     } finally {
@@ -189,7 +190,7 @@ export default function ChatRoom() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 max-w-2xl mx-auto border-x border-gray-100">
+    <div className="flex flex-col h-[100dvh] bg-gray-50 max-w-2xl mx-auto border-x border-gray-100 overflow-hidden">
       {/* Header */}
       <header className="bg-white px-4 h-16 flex items-center justify-between border-b border-gray-100 shrink-0 shadow-sm z-10">
         <div className="flex items-center gap-3">
@@ -270,7 +271,7 @@ export default function ChatRoom() {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-white border-t border-gray-100 shrink-0 pb-8">
+      <div className="p-4 bg-white border-t border-gray-100 shrink-0 pb-safe">
         <form onSubmit={handleSendMessage} className="relative">
           <input 
             type="text"
