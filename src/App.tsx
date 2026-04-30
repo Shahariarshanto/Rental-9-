@@ -7,6 +7,7 @@ import PropertyDetails from './pages/PropertyDetails';
 import AddProperty from './pages/AddProperty';
 import Favorites from './pages/Favorites';
 import MyListings from './pages/MyListings';
+import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Home as HomeIcon, 
   Search, 
@@ -120,19 +121,21 @@ function Navigation() {
 
 export default function App() {
   return (
-    <Router>
-      <div className="font-sans antialiased text-gray-900">
-        <Navigation />
-        <main>
-          <Routes>
-            <Route path="/" element={<div className="pt-16"><Home /></div>} />
-            <Route path="/property/:id" element={<PropertyDetails />} />
-            <Route path="/add" element={<div className="pt-16"><AddProperty /></div>} />
-            <Route path="/favorites" element={<div className="pt-16"><Favorites /></div>} />
-            <Route path="/my-listings" element={<div className="pt-16"><MyListings /></div>} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <div className="font-sans antialiased text-gray-900">
+          <Navigation />
+          <main>
+            <Routes>
+              <Route path="/" element={<div className="pt-16"><Home /></div>} />
+              <Route path="/property/:id" element={<PropertyDetails />} />
+              <Route path="/add" element={<div className="pt-16"><AddProperty /></div>} />
+              <Route path="/favorites" element={<div className="pt-16"><Favorites /></div>} />
+              <Route path="/my-listings" element={<div className="pt-16"><MyListings /></div>} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </ErrorBoundary>
   );
 }

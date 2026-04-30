@@ -15,49 +15,40 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
     function isValidProperty(data) {
-      return data.title is string && data.title.size() <= 150 &&
+      return data.title is string && 
              data.category in ['Bachelor', 'Family', 'Office'] &&
-             data.rent is number && data.rent >= 0 &&
-             data.get('deposit', 0) is number &&
-             data.city is string && data.city.size() <= 100 &&
-             data.area is string && data.area.size() <= 100 &&
-             data.get('address', '') is string &&
-             data.get('description', '') is string &&
+             data.rent is number &&
              data.ownerId is string &&
              data.ownerName is string &&
-             data.ownerPhone is string &&
-             data.amenities is list &&
-             (data.get('images', []) is list) &&
-             (data.get('isFeatured', false) is bool);
+             data.ownerPhone is string;
     }
 
     match /properties/{propertyId} {
       allow read: if true;
       
       allow create: if isSignedIn() && 
-                      isValidId(propertyId) && 
                       isValidProperty(request.resource.data) &&
                       request.resource.data.ownerId == request.auth.uid &&
-                      request.resource.data.get('createdAt', request.time) == request.time;
+                      request.resource.data.createdAt == request.time;
 
       allow update: if isOwner(resource.data.ownerId) &&
                       isValidProperty(request.resource.data) &&
                       request.resource.data.ownerId == resource.data.ownerId &&
-                      request.resource.data.get('createdAt', resource.data.createdAt) == resource.data.createdAt &&
-                      request.resource.data.get('updatedAt', request.time) == request.time;
+                      request.resource.data.updatedAt == request.time;
       
       allow delete: if isOwner(resource.data.ownerId);
     }
 
     match /favorites/{favoriteId} {
+      // Allow read if user is authenticated and is the owner of the favorite
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+      // Allow create if user is owner of the data
+      allow create: if isSignedIn() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.createdAt == request.time;
+      // Allow delete if user is owner
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }
