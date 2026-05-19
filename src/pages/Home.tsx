@@ -22,6 +22,8 @@ import { formatCurrency } from '../lib/utils';
 import { seedDatabase } from '../lib/seedData';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import OptimizedImage from '../components/OptimizedImage';
+import { PropertySkeleton } from '../components/Skeletons';
+import { Helmet } from 'react-helmet-async';
 
 export default function HomePage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -132,7 +134,10 @@ export default function HomePage() {
   };
 
   const handleSeed = async () => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      alert("Please login first to seed example data.");
+      return;
+    }
     setSeeding(true);
     try {
       await seedDatabase(auth.currentUser.uid);
@@ -195,6 +200,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-4">
+      <Helmet>
+        <title>BariVara | Find Your Perfect Rental Home</title>
+        <meta name="description" content="Discover the best house rentals, bachelor rooms, and office spaces in Dhaka with BariVara." />
+      </Helmet>
+
       {/* Search Header */}
       <div className="px-4 mb-6">
         <div className="relative group">
@@ -350,10 +360,12 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 gap-6 pb-24">
             {loading ? (
-              <div className="col-span-full py-20 flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin" />
-                <p className="text-gray-400 text-xs font-bold mt-4 tracking-widest">SEARCHING PROPERTIES</p>
-              </div>
+              <>
+                <PropertySkeleton />
+                <PropertySkeleton />
+                <PropertySkeleton />
+                <PropertySkeleton />
+              </>
             ) : filteredProperties.length > 0 ? (
               filteredProperties.map((p, idx) => (
                 <motion.div

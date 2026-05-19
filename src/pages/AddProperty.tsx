@@ -5,6 +5,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { optimizeImage } from '../lib/imageOptimizer';
+import { generatePropertyDescription } from '../lib/gemini';
 import { 
   ChevronLeft, 
   Upload, 
@@ -17,7 +18,8 @@ import {
   DollarSign,
   ShieldCheck,
   Plus,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -48,6 +50,31 @@ export default function AddProperty() {
   const [images, setImages] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    if (!formData.title || !formData.area || !formData.rent) {
+      alert("Please fill in the title, area, and rent first.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const desc = await generatePropertyDescription({
+        title: formData.title,
+        category: formData.category,
+        area: formData.area,
+        city: formData.city,
+        rent: Number(formData.rent),
+        amenities: selectedAmenities,
+      });
+      if (desc) {
+        setFormData(prev => ({ ...prev, description: desc }));
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -161,7 +188,22 @@ export default function AddProperty() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Description</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Description</label>
+                <button
+                  type="button"
+                  onClick={handleGenerateDescription}
+                  disabled={isGenerating}
+                  className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  AI Generate
+                </button>
+              </div>
               <textarea 
                 required
                 rows={4}
