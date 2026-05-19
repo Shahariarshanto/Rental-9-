@@ -18,13 +18,18 @@ import {
   Pencil,
   Settings,
   MessageSquare,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency, formatPhoneNumber } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import OptimizedImage from '../components/OptimizedImage';
 import { UserProfile } from '../types';
+import { PropertyDetailsSkeleton } from '../components/Skeletons';
+import { getPropertyInsights } from '../lib/gemini';
+import { Helmet } from 'react-helmet-async';
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -34,6 +39,9 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+  const [insights, setInsights] = useState('');
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -44,6 +52,13 @@ export default function PropertyDetails() {
         if (docSnap.exists()) {
           const pData = { id: docSnap.id, ...docSnap.data() } as Property;
           setProperty(pData);
+
+          // Fetch insights
+          setLoadingInsights(true);
+          getPropertyInsights(pData).then(res => {
+            setInsights(res);
+            setLoadingInsights(false);
+          });
 
           // Fetch owner profile for privacy setting
           const ownerRef = doc(db, 'users', pData.ownerId);
@@ -144,11 +159,7 @@ export default function PropertyDetails() {
   const isPrivate = ownerProfile?.contactPrivacy === 'Private';
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PropertyDetailsSkeleton />;
   }
 
   if (!property) {
@@ -168,6 +179,10 @@ export default function PropertyDetails() {
 
   return (
     <div className="min-h-screen bg-white pb-32">
+      <Helmet>
+        <title>{property.title} | BariVara</title>
+        <meta name="description" content={`Check out this ${property.category} for rent in ${property.area}, ${property.city}. Monthly rent: ${property.rent} BDT.`} />
+      </Helmet>
       {/* Header Bar (Transparent overlay on mobile) */}
       <div className="fixed top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-40" />
       
@@ -210,17 +225,27 @@ export default function PropertyDetails() {
       {/* Image Gallery (Simple Slider/Main Image) */}
       <div className="relative bg-gray-100">
         <div className="h-[40vh] md:h-[60vh] relative overflow-hidden">
-          {property.images && property.images.length > 0 ? (
-            <OptimizedImage 
-              src={property.images[0]} 
-              alt={property.title} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
-              <HomeIcon className="w-20 h-20" />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeImageIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="w-full h-full"
+            >
+              {property.images && property.images.length > 0 ? (
+                <OptimizedImage
+                  src={property.images[activeImageIndex]}
+                  alt={property.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <HomeIcon className="w-20 h-20" />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Thumbnail Gallery (if more than 1 image) */}
@@ -228,16 +253,19 @@ export default function PropertyDetails() {
           <div className="absolute bottom-12 left-0 right-0 px-4 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 pb-2">
               {property.images.map((img, index) => (
-                <div 
+                <button
                   key={index} 
-                  className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-lg pointer-events-auto"
+                  onClick={() => setActiveImageIndex(index)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 shadow-lg pointer-events-auto transition-all ${
+                    activeImageIndex === index ? 'border-indigo-600 scale-105' : 'border-white opacity-80'
+                  }`}
                 >
                   <OptimizedImage 
                     src={img} 
                     alt={`${property.title} - view ${index + 1}`} 
                     className="w-full h-full object-cover"
                   />
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -291,6 +319,25 @@ export default function PropertyDetails() {
                 {property.utilityDetails}
               </div>
             )}
+          </section>
+
+          <section className="mb-8">
+            <h3 className="flex items-center text-lg font-bold text-gray-900 mb-4">
+              <Sparkles className="w-5 h-5 mr-2 text-indigo-500" />
+              AI Insights
+            </h3>
+            {loadingInsights ? (
+              <div className="flex items-center gap-2 text-gray-400 py-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Generating Insights...</span>
+              </div>
+            ) : insights ? (
+              <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
+                <div className="text-sm text-indigo-900/80 prose prose-indigo max-w-none whitespace-pre-line">
+                  {insights}
+                </div>
+              </div>
+            ) : null}
           </section>
 
           <section className="mb-8">

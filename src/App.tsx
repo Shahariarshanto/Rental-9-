@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Inbox from './pages/Inbox';
 import Chat from './pages/Chat';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIAssistant from './components/AIAssistant';
 import { 
   Home as HomeIcon, 
   Search, 
@@ -229,6 +230,7 @@ export default function App() {
               <Route path="/chat/:chatId" element={<Chat />} />
             </Routes>
           </main>
+          <AIAssistant />
         </div>
       </Router>
     </ErrorBoundary>
