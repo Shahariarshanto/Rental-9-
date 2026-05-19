@@ -73,9 +73,9 @@ function Navigation() {
       {/* Top Navbar */}
       {!location.pathname.startsWith('/property/') && !isChatPage && (
         <header className="bg-white border-b border-gray-100 fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-label="BariVara Home">
             <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-100">
-              <HomeIcon className="w-5 h-5 text-white" />
+              <HomeIcon className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
             <span className="font-black text-xl tracking-tighter text-gray-900">Bari<span className="text-indigo-600">Vara</span></span>
           </Link>
@@ -85,6 +85,8 @@ function Navigation() {
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="w-10 h-10 rounded-full border-2 border-indigo-100 p-0.5 overflow-hidden"
+                aria-label="Open profile menu"
+                aria-expanded={showProfileMenu}
               >
                 <img src={user.photoURL || "https://ui-avatars.com/api/?name=" + user.displayName} alt="Profile" className="w-full h-full rounded-full" />
               </button>
